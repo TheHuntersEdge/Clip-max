@@ -17,7 +17,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma as any),
   providers: [GitHub],
   session: { strategy: "database" },
-  pages: {
-    signIn: "/login",
-  },
 });
