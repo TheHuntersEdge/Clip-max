@@ -15,7 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy Prisma schema/config first so the `prisma generate` postinstall has
+# something to read during `npm ci`.
+COPY package*.json prisma.config.ts ./
+COPY prisma ./prisma
 RUN npm ci
 
 COPY . .
