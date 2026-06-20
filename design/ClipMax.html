@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipMax</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M42 40 L33 33 L20 52 L18 64 L26 56 L31 47 L40 50 Z' fill='%2306DBFD'/%3E%3Cpath d='M18 64 L40 54 L34 64 L26 70 Z' fill='%2306DBFD'/%3E%3Cpath d='M58 40 L67 33 L80 52 L82 64 L74 56 L69 47 L60 50 Z' fill='%2306DBFD'/%3E%3Cpath d='M82 64 L60 54 L66 64 L74 70 Z' fill='%2306DBFD'/%3E%3Cpath d='M50 8 L44 34 L50 70 Z' fill='%2306DBFD'/%3E%3Cpath d='M50 8 L56 34 L50 70 Z' fill='%230586a0'/%3E%3Cpath d='M50 60 L46 84 L50 93 L54 84 Z' fill='%2306DBFD'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+<style>
+:root{
+  --cyan:#06DBFD; --cyan-dim:#0398b3; --ink:#05080B; --deep:#0A1218;
+  --card:#0E1A20; --line:#16242c; --line2:#1d2f39;
+  --txt:#E6F0F3; --mut:#7C8B93; --mut2:#566069;
+  --good:#22d39a; --warn:#f3b13a; --bad:#e85d52;
+  --pink:#ff3b6b; --purple:#7c5cff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ink);color:var(--txt);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{overflow:hidden}
+#root{height:100vh}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:#2a3f4a}
+.mono{font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:inherit;text-decoration:none}
+
+/* layout */
+.app{display:flex;height:100vh}
+.side{width:230px;flex-shrink:0;background:var(--deep);border-right:1px solid var(--line);display:flex;flex-direction:column;height:100vh}
+.main{flex:1;overflow-y:auto;height:100vh;position:relative}
+.wrap{max-width:1280px;margin:0 auto;padding:34px 40px 80px}
+
+/* brand */
+.brand{display:flex;align-items:center;gap:11px;padding:20px 20px 18px;border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--cyan),#0593ad);display:grid;place-items:center;flex-shrink:0;box-shadow:0 0 16px rgba(6,219,253,.35)}
+.logo svg{width:19px;height:19px}
+.brand-name{font-weight:800;font-size:17px;letter-spacing:-.3px}
+.brand-name b{color:var(--cyan)}
+.brand-sub{font-size:10px;color:var(--mut2);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px}
+
+/* nav */
+.nav{flex:1;overflow-y:auto;padding:10px 12px}
+.nav-sec{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut2);padding:14px 12px 6px;font-weight:700}
+.nav-i{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:var(--mut);font-size:13.5px;font-weight:500;margin-bottom:1px;cursor:pointer;position:relative;transition:.13s}
+.nav-i:hover{background:#101f27;color:var(--txt)}
+.nav-i.on{background:linear-gradient(90deg,rgba(6,219,253,.14),rgba(6,219,253,.03));color:var(--cyan)}
+.nav-i.on:before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--cyan)}
+.nav-i svg{width:17px;height:17px;flex-shrink:0;stroke-width:1.9}
+.nav-i .badge{margin-left:auto;font-size:10px;background:var(--cyan);color:var(--ink);font-weight:800;padding:1px 7px;border-radius:20px}
+.nav-i .dot{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+
+/* workspace foot */
+.ws{padding:12px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.ws-av{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#13313b,#0a1b22);display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--cyan);border:1px solid var(--line2)}
+.ws-name{font-size:12.5px;font-weight:700}
+.ws-tag{font-size:10px;color:var(--mut2)}
+
+/* topbar */
+.top{position:sticky;top:0;z-index:20;background:rgba(5,8,11,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:0 40px;height:60px;display:flex;align-items:center;gap:14px}
+.crumb{font-size:13px;color:var(--mut)}
+.crumb b{color:var(--txt);font-weight:600}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.live-pill{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--good);background:rgba(34,211,154,.1);border:1px solid rgba(34,211,154,.25);padding:5px 11px;border-radius:20px}
+.live-pill .b{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* page head */
+.ph{margin-bottom:26px}
+.ph h1{font-size:30px;font-weight:800;letter-spacing:-.7px}
+.ph p{color:var(--mut);font-size:14px;margin-top:6px;max-width:680px;line-height:1.5}
+.ph-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:9px 15px;border-radius:9px;background:#142028;color:var(--txt);border:1px solid var(--line2);transition:.13s}
+.btn:hover{background:#1a2a33;border-color:#26404c}
+.btn svg{width:15px;height:15px}
+.btn-pri{background:linear-gradient(135deg,var(--cyan),#04b6d4);color:var(--ink);border:none;font-weight:700;box-shadow:0 4px 16px rgba(6,219,253,.25)}
+.btn-pri:hover{filter:brightness(1.08);box-shadow:0 6px 22px rgba(6,219,253,.4)}
+.btn-gho{background:transparent}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-lg{padding:12px 20px;font-size:14px}
+
+/* cards / grid */
+.grid{display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-t{font-size:15px;font-weight:700}
+.card-d{font-size:12.5px;color:var(--mut);margin-top:3px;font-weight:400}
+
+/* stat */
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden}
+.stat .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:7px}
+.stat .lbl svg{width:14px;height:14px;color:var(--cyan)}
+.stat .val{font-size:32px;font-weight:800;letter-spacing:-1px;margin-top:8px;font-feature-settings:'tnum'}
+.stat .sub{font-size:11.5px;color:var(--mut2);margin-top:4px}
+.stat .up{color:var(--good);font-weight:600}
+.stat .glow{position:absolute;right:-30px;top:-30px;width:110px;height:110px;background:radial-gradient(circle,rgba(6,219,253,.13),transparent 70%);pointer-events:none}
+
+/* tag */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid}
+.tag-good{color:var(--good);background:rgba(34,211,154,.1);border-color:rgba(34,211,154,.25)}
+.tag-warn{color:var(--warn);background:rgba(243,177,58,.1);border-color:rgba(243,177,58,.25)}
+.tag-bad{color:var(--bad);background:rgba(232,93,82,.1);border-color:rgba(232,93,82,.25)}
+.tag-cy{color:var(--cyan);background:rgba(6,219,253,.1);border-color:rgba(6,219,253,.25)}
+.tag-mut{color:var(--mut);background:#121f27;border-color:var(--line2)}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.tab{font-size:13px;font-weight:600;padding:8px 16px;border-radius:22px;color:var(--mut);background:#101c23;border:1px solid var(--line)}
+.tab:hover{color:var(--txt)}
+.tab.on{color:var(--cyan);border-color:rgba(6,219,253,.4);background:rgba(6,219,253,.07)}
+
+/* platform chips */
+.plat{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:7px;background:#101c23;border:1px solid var(--line2)}
+.plat .pd{width:8px;height:8px;border-radius:50%}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2);font-weight:700;padding:0 16px 12px}
+.tbl td{padding:15px 16px;border-top:1px solid var(--line);font-size:13.5px;vertical-align:middle}
+.tbl tr:hover td{background:#101c2330}
+
+/* clip card */
+.clip{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:.15s;cursor:pointer}
+.clip:hover{border-color:var(--line2);transform:translateY(-2px)}
+.clip-thumb{aspect-ratio:9/16;background:linear-gradient(160deg,#13242c,#0a141a);position:relative;display:grid;place-items:center}
+.clip-score{position:absolute;top:10px;left:10px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;background:rgba(5,8,11,.7);backdrop-filter:blur(6px);border:1px solid rgba(6,219,253,.3);color:var(--cyan)}
+.clip-dur{position:absolute;bottom:10px;right:10px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(5,8,11,.75);color:#fff}
+.clip-play{width:46px;height:46px;border-radius:50%;background:rgba(6,219,253,.92);display:grid;place-items:center;box-shadow:0 4px 20px rgba(6,219,253,.5)}
+.clip-play svg{width:20px;height:20px;color:var(--ink);margin-left:2px}
+.clip-cap{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);font-weight:900;font-size:15px;color:#fff;text-shadow:0 2px 8px #000;text-align:center;width:90%}
+.clip-body{padding:13px 14px}
+.clip-title{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clip-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
+
+/* progress */
+.bar{height:6px;background:#0c1820;border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),#04b6d4);border-radius:6px}
+
+/* input */
+.inp{width:100%;background:#0a141a;border:1px solid var(--line2);border-radius:9px;padding:11px 13px;color:var(--txt);font-size:13.5px;transition:.13s}
+.inp:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(6,219,253,.12)}
+.inp::placeholder{color:var(--mut2)}
+.lbl-f{font-size:12px;font-weight:600;color:var(--mut);margin-bottom:7px;display:block}
+
+/* misc */
+.flow{position:relative}
+.empty{text-align:center;padding:60px 20px;color:var(--mut2)}
+.empty svg{width:38px;height:38px;margin-bottom:14px;opacity:.5}
+.empty h3{font-size:16px;color:var(--mut);font-weight:600;margin-bottom:6px}
+.divider{height:1px;background:var(--line);margin:24px 0}
+.kbd{font-size:11px;padding:2px 7px;border-radius:5px;background:#0c1820;border:1px solid var(--line2);color:var(--mut)}
+.gradient-text{background:linear-gradient(120deg,var(--cyan),#7be0ff,var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* pipeline viz */
+.pipe{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0}
+.pstep{flex:1;min-width:140px;position:relative;padding:16px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-right:26px}
+.pstep:last-child{margin-right:0}
+.pstep:not(:last-child):after{content:'';position:absolute;right:-26px;top:50%;width:26px;height:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
+.pstep:not(:last-child):before{content:'';position:absolute;right:-9px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:7px solid var(--cyan);border-top:5px solid transparent;border-bottom:5px solid transparent;z-index:2}
+.pstep .pn{font-size:10px;font-weight:800;color:var(--cyan);letter-spacing:1px}
+.pstep .pt{font-size:13px;font-weight:700;margin:6px 0 4px}
+.pstep .pd{font-size:11px;color:var(--mut);line-height:1.4}
+.pstep.done{border-color:rgba(34,211,154,.3)}
+.pstep.done .pn{color:var(--good)}
+.pstep.active{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan),0 6px 20px rgba(6,219,253,.15)}
+
+@media(max-width:880px){
+  .side{position:fixed;left:0;top:0;z-index:50;transform:translateX(-100%);transition:.2s}
+  .side.open{transform:translateX(0)}
+  .wrap{padding:24px 18px 60px}
+  .top{padding:0 18px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef} = React;
+
+/* ============ ICONS ============ */
+const I = {
+  bolt:<path d="M13 2L4.5 13H11l-1 9 8.5-11H12l1-9z"/>,
+  grid:<g><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></g>,
+  stream:<g><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M7 7l5-4 5 4"/></g>,
+  scissors:<g><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></g>,
+  flow:<g><path d="M3 12h4l3-9 4 18 3-9h4"/></g>,
+  mega:<g><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></g>,
+  cal:<g><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></g>,
+  chart:<g><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-6"/></g>,
+  users:<g><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></g>,
+  cart:<g><circle cx="9" cy="21" r="1.5"/><circle cx="20" cy="21" r="1.5"/><path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6"/></g>,
+  bot:<g><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 2h8"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/></g>,
+  plug:<g><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 01-12 0V8zM12 17v5"/></g>,
+  inbox:<g><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></g>,
+  paint:<g><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2a10 10 0 000 20c1.1 0 2-.9 2-2 0-.55-.2-1-.55-1.4-.35-.4-.45-.85-.45-1.6 0-1.1.9-2 2-2h2.55A4.45 4.45 0 0022 10.55C22 5.86 17.5 2 12 2z"/></g>,
+  play:<path d="M5 3l16 9-16 9V3z"/>,
+  plus:<g><path d="M12 5v14M5 12h14"/></g>,
+  search:<g><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></g>,
+  refresh:<g><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></g>,
+  eye:<g><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></g>,
+  heart:<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 000-7.78z"/>,
+  share:<g><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></g>,
+  check:<path d="M20 6L9 17l-5-5"/>,
+  x:<path d="M18 6L6 18M6 6l12 12"/>,
+  clock:<g><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></g>,
+  film:<g><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></g>,
+  zap:<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>,
+  arrow:<path d="M5 12h14M12 5l7 7-7 7"/>,
+  dl:<g><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></g>,
+  sliders:<g><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></g>,
+  trophy:<g><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z"/></g>,
+};
+function Ic({n,s}){return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={s}>{I[n]}</svg>}
+function IcF({n,s}){return <svg viewBox="0 0 24 24" fill="currentColor" style={s}>{I[n]}</svg>}
+
+/* ClipMax brandmark — angular cyan spear */
+function Logo({size=22,mono}){
+  const a=mono||'#06DBFD', b=mono||'#0586a0';
+  return <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+    <path d="M42 40 L33 33 L20 52 L18 64 L26 56 L31 47 L40 50 Z" fill={a}/>
+    <path d="M18 64 L40 54 L34 64 L26 70 Z" fill={a} opacity=".85"/>
+    <path d="M58 40 L67 33 L80 52 L82 64 L74 56 L69 47 L60 50 Z" fill={b}/>
+    <path d="M82 64 L60 54 L66 64 L74 70 Z" fill={b} opacity=".85"/>
+    <path d="M50 8 L44 34 L50 70 Z" fill={a}/>
+    <path d="M50 8 L56 34 L50 70 Z" fill={b}/>
+    <path d="M50 60 L46 84 L50 93 L54 84 Z" fill={a}/>
+  </svg>
+}
+
+/* ============ MOCK DATA ============ */
+const PLAT = {
+  tiktok:{name:'TikTok',c:'#25F4EE'},
+  instagram:{name:'Instagram',c:'#E1306C'},
+  youtube:{name:'YouTube',c:'#FF0000'},
+  facebook:{name:'Facebook',c:'#1877F2'},
+};
+const SRC = {
+  twitch:{name:'Twitch',c:'#9146FF'},
+  kick:{name:'Kick',c:'#53FC18'},
+  youtube:{name:'YouTube',c:'#FF0000'},
+};
+
+const STREAMS = [
+  {id:1,ch:'hunteruncut',plat:'twitch',status:'live',title:'8-Hour SMMA Build — Day 12',started:'2h 14m ago',clips:0,view:'1.2K'},
+  {id:2,ch:'hunteruncut',plat:'twitch',status:'processing',title:'Cold Calling Live + Q&A',started:'Yesterday',clips:18,prog:64,view:'3.4K'},
+  {id:3,ch:'hunters_edge',plat:'kick',status:'done',title:'Closing $10K Deals On Stream',started:'2 days ago',clips:31,view:'5.1K'},
+  {id:4,ch:'hunteruncut',plat:'youtube',status:'done',title:'Full Day In My Life — Scottsdale',started:'4 days ago',clips:27,view:'12K'},
+];
+const CLIPS = [
+  {id:1,title:'"I made $4K my first week door knocking"',score:94,dur:'0:31',cap:'$4K WEEK',status:'posted',plats:['tiktok','instagram','youtube'],v:'42.1K',l:'3.8K',from:'Closing $10K Deals'},
+  {id:2,title:'The exact script that closes every time',score:91,dur:'0:44',cap:'THE SCRIPT',status:'posted',plats:['tiktok','youtube'],v:'28.7K',l:'2.1K',from:'Cold Calling Live'},
+  {id:3,title:'Why most people quit before week 3',score:89,dur:'0:38',cap:'WEEK 3',status:'scheduled',plats:['tiktok','instagram','youtube','facebook'],v:'-',l:'-',from:'Cold Calling Live'},
+  {id:4,title:'He said no 47 times. Then this happened',score:87,dur:'0:52',cap:'47 NOs',status:'ready',plats:['tiktok','instagram'],v:'-',l:'-',from:'Closing $10K Deals'},
+  {id:5,title:'My morning routine before an 8hr stream',score:84,dur:'0:29',cap:'5AM',status:'ready',plats:['tiktok','youtube'],v:'-',l:'-',from:'Full Day In My Life'},
+  {id:6,title:'Stop overcomplicating your offer',score:82,dur:'0:41',cap:'KEEP IT SIMPLE',status:'rendering',plats:['tiktok','instagram','youtube'],v:'-',l:'-',prog:72,from:'Closing $10K Deals'},
+  {id:7,title:'The DM that landed a $2K client',score:80,dur:'0:35',cap:'ONE DM',status:'rendering',plats:['tiktok'],v:'-',l:'-',prog:41,from:'Cold Calling Live'},
+  {id:8,title:'18 and running a 6-figure agency',score:78,dur:'0:47',cap:'18 Y/O',status:'ready',plats:['tiktok','instagram','youtube','facebook'],v:'-',l:'-',from:'Full Day In My Life'},
+];
+const ACCOUNTS = [
+  {id:1,h:'@hunteruncut',plat:'tiktok',foll:'24.1K',health:'healthy',src:'connected'},
+  {id:2,h:'@hunteruncut',plat:'instagram',foll:'8.3K',health:'healthy',src:'connected'},
+  {id:3,h:'HunterUncut',plat:'youtube',foll:'12.7K',health:'healthy',src:'connected'},
+  {id:4,h:'@hunters.edge',plat:'tiktok',foll:'5.2K',health:'warn',src:'connected'},
+  {id:5,h:'@hedge.clips',plat:'instagram',foll:'1.1K',health:'healthy',src:'purchased'},
+  {id:6,h:'@edge.daily',plat:'tiktok',foll:'3.4K',health:'healthy',src:'purchased'},
+];
+const MARKET = [
+  {id:1,plat:'tiktok',foll:'5K-10K',niche:'Business',age:'8 mo',warm:'ready',region:'US',price:89},
+  {id:2,plat:'tiktok',foll:'1K-5K',niche:'Fitness',age:'5 mo',warm:'ready',region:'US',price:54},
+  {id:3,plat:'instagram',foll:'10K-25K',niche:'Finance',age:'14 mo',warm:'ready',region:'US',price:179},
+  {id:4,plat:'tiktok',foll:'25K+',niche:'Motivation',age:'18 mo',warm:'ready',region:'US',price:349},
+  {id:5,plat:'instagram',foll:'1K-5K',niche:'Lifestyle',age:'4 mo',warm:'warming',region:'EU',price:42},
+  {id:6,plat:'youtube',foll:'5K-10K',niche:'Education',age:'11 mo',warm:'ready',region:'US',price:129},
+  {id:7,plat:'tiktok',foll:'1K-5K',niche:'Business',age:'6 mo',warm:'ready',region:'US',price:59},
+  {id:8,plat:'instagram',foll:'5K-10K',niche:'Coaching',age:'9 mo',warm:'ready',region:'US',price:99},
+];
+
+/* shared bits */
+function PlatChip({p,small}){const d=PLAT[p]||SRC[p];return <span className="plat" style={small?{fontSize:'10.5px',padding:'3px 8px'}:{}}><span className="pd" style={{background:d.c}}></span>{d.name}</span>}
+function PlatDots({list}){return <div style={{display:'flex',gap:5}}>{list.map(p=><span key={p} title={PLAT[p].name} style={{width:9,height:9,borderRadius:'50%',background:PLAT[p].c}}></span>)}</div>}
+function StatusTag({s}){
+  const m={posted:['tag-good','Posted'],scheduled:['tag-cy','Scheduled'],ready:['tag-mut','Ready'],rendering:['tag-warn','Rendering'],live:['tag-bad','Live'],processing:['tag-warn','Processing'],done:['tag-good','Clipped'],healthy:['tag-good','Healthy'],warn:['tag-warn','Needs attention'],ready2:['tag-good','Ready'],warming:['tag-warn','Warming']};
+  const[c,t]=m[s]||['tag-mut',s];return <span className={'tag '+c}>{t}</span>
+}
+</script>
+<script type="text/babel" data-presets="react">
+const {useState:uS,useEffect:uE} = React;
+
+/* ============ DASHBOARD ============ */
+function Dashboard({go}){
+  return <div className="wrap">
+    <div className="ph ph-row">
+      <div><h1>Dashboard</h1><p>Your clipping machine at a glance. Connect a source, and ClipMax turns every stream into clips across every account — on autopilot.</p></div>
+      <div style={{display:'flex',gap:10}}><button className="btn"><Ic n="refresh"/>Refresh</button><button className="btn btn-pri" onClick={()=>go('streams')}><Ic n="plus"/>Connect Source</button></div>
+    </div>
+
+    <div className="grid" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:16}}>
+      {[['film','Clips this month','1,284','+312 this week'],['eye','Total views','2.4M','+18% vs last mo'],['mega','Auto-posts today','96','across 6 accounts'],['stream','Active sources','3','1 live now']].map(([ic,l,v,s],i)=>
+        <div className="stat" key={i}><div className="glow"></div><div className="lbl"><Ic n={ic}/>{l}</div><div className="val">{v}</div><div className="sub up">{s}</div></div>
+      )}
+    </div>
+
+    <div className="card" style={{marginBottom:16,background:'linear-gradient(120deg,rgba(6,219,253,.07),rgba(124,92,255,.05))',borderColor:'rgba(6,219,253,.2)'}}>
+      <div className="card-h"><div><div className="card-t">The ClipMax Loop</div><div className="card-d">This runs automatically every time you end a stream. No manual steps.</div></div><span className="tag tag-cy"><span style={{width:6,height:6,borderRadius:'50%',background:'var(--cyan)',display:'inline-block'}}></span> Running</span></div>
+      <div className="pipe">
+        {[['01','Stream ends','Source fires offline event','done'],['02','VOD pulled','Full recording ingested','done'],['03','Transcribed','Word-level timestamps','done'],['04','Moments scored','AI ranks the best cuts','active'],['05','Clips rendered','Reframe + captions + brand','active'],['06','Auto-posted','Blasted to all accounts','']].map(([n,t,d,st],i)=>
+          <div key={i} className={'pstep '+st}><div className="pn">{n}</div><div className="pt">{t}</div><div className="pd">{d}</div></div>
+        )}
+      </div>
+    </div>
+
+    <div className="grid" style={{gridTemplateColumns:'1.4fr 1fr',alignItems:'start'}}>
+      <div className="card">
+        <div className="card-h"><div className="card-t">Recent streams</div><button className="btn btn-sm btn-gho" onClick={()=>go('streams')}>View all<Ic n="arrow"/></button></div>
+        {STREAMS.slice(0,4).map(s=>
+          <div key={s.id} style={{display:'flex',alignItems:'center',gap:14,padding:'13px 0',borderTop:'1px solid var(--line)'}}>
+            <div style={{width:42,height:42,borderRadius:9,background:'#0a141a',display:'grid',placeItems:'center',flexShrink:0,border:'1px solid var(--line2)'}}><Ic n="stream" s={{width:18,color:SRC[s.plat].c}}/></div>
+            <div style={{flex:1,minWidth:0}}><div style={{fontWeight:600,fontSize:13.5,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.title}</div><div style={{fontSize:11.5,color:'var(--mut)',marginTop:2,display:'flex',gap:8,alignItems:'center'}}><PlatChip p={s.plat} small/> · {s.started}</div></div>
+            <div style={{textAlign:'right'}}><StatusTag s={s.status}/><div style={{fontSize:12,color:'var(--mut)',marginTop:5}}>{s.status==='processing'?<span className="mono" style={{color:'var(--warn)'}}>{s.clips} clips · {s.prog}%</span>:s.status==='live'?<span className="mono">{s.view} watching</span>:<span className="mono">{s.clips} clips</span>}</div></div>
+          </div>
+        )}
+      </div>
+      <div className="card">
+        <div className="card-h"><div className="card-t">Top clips this week</div><Ic n="trophy" s={{width:16,color:'var(--cyan)'}}/></div>
+        {CLIPS.filter(c=>c.status==='posted').concat(CLIPS).slice(0,4).map((c,i)=>
+          <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderTop:i?'1px solid var(--line)':'none'}}>
+            <div style={{fontSize:20,fontWeight:800,color:'var(--mut2)',width:22}}>{i+1}</div>
+            <div style={{width:34,height:46,borderRadius:6,background:'linear-gradient(160deg,#13242c,#0a141a)',flexShrink:0,position:'relative',border:'1px solid var(--line2)'}}><span style={{position:'absolute',top:3,left:3,fontSize:8,fontWeight:800,color:'var(--cyan)'}}>{c.score}</span></div>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.title}</div><div style={{fontSize:11,color:'var(--mut)',marginTop:2}}>{c.v!=='-'?c.v+' views':'pending'}</div></div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+}
+
+/* ============ STREAMS ============ */
+function Streams(){
+  const[tab,setTab]=uS('all');
+  return <div className="wrap">
+    <div className="ph ph-row">
+      <div><h1>Sources</h1><p>Connect a channel once. ClipMax watches for every stream, and the second you go offline it pulls the VOD and starts clipping.</p></div>
+      <button className="btn btn-pri"><Ic n="plus"/>Connect Source</button>
+    </div>
+
+    <div className="grid" style={{gridTemplateColumns:'repeat(3,1fr)',marginBottom:26}}>
+      {Object.entries(SRC).map(([k,v])=>
+        <div className="card" key={k} style={{padding:18}}>
+          <div style={{display:'flex',alignItems:'center',gap:11,marginBottom:14}}>
+            <div style={{width:38,height:38,borderRadius:9,background:'#0a141a',display:'grid',placeItems:'center',border:'1px solid var(--line2)'}}><Ic n="stream" s={{width:18,color:v.c}}/></div>
+            <div><div style={{fontWeight:700,fontSize:14}}>{v.name}</div><div style={{fontSize:11.5,color:'var(--mut)'}}>{k==='twitch'?'Instant live detection':k==='kick'?'Live detection':'Post-stream VOD'}</div></div>
+          </div>
+          <button className="btn btn-pri btn-sm" style={{width:'100%',justifyContent:'center'}}><Ic n="plug"/>Connect {v.name}</button>
+        </div>
+      )}
+    </div>
+
+    <div className="card">
+      <div className="card-h"><div><div className="card-t">Stream history</div><div className="card-d">Every stream ClipMax has seen, and what it produced.</div></div>
+        <div className="tabs" style={{margin:0}}>{['all','live','processing','done'].map(t=><button key={t} className={'tab '+(tab===t?'on':'')} onClick={()=>setTab(t)} style={{padding:'5px 13px',fontSize:12}}>{t[0].toUpperCase()+t.slice(1)}</button>)}</div>
+      </div>
+      <table className="tbl">
+        <thead><tr><th>Stream</th><th>Source</th><th>When</th><th>Clips</th><th>Status</th><th></th></tr></thead>
+        <tbody>{STREAMS.filter(s=>tab==='all'||s.status===tab).map(s=>
+          <tr key={s.id}>
+            <td style={{fontWeight:600,maxWidth:280}}>{s.title}</td>
+            <td><PlatChip p={s.plat} small/></td>
+            <td style={{color:'var(--mut)'}}>{s.started}</td>
+            <td>{s.status==='processing'?<div style={{minWidth:90}}><div className="mono" style={{fontSize:12,color:'var(--warn)',marginBottom:4}}>{s.clips} · {s.prog}%</div><div className="bar"><i style={{width:s.prog+'%'}}></i></div></div>:<span className="mono" style={{fontWeight:700,color:s.clips?'var(--cyan)':'var(--mut2)'}}>{s.clips||'—'}</span>}</td>
+            <td>{s.status==='live'?<span className="tag tag-bad"><span className="b" style={{width:6,height:6,borderRadius:'50%',background:'var(--bad)',display:'inline-block'}}></span>Live</span>:<StatusTag s={s.status}/>}</td>
+            <td style={{textAlign:'right'}}><button className="btn btn-sm btn-gho">{s.status==='done'?'View clips':'Details'}<Ic n="arrow"/></button></td>
+          </tr>
+        )}</tbody>
+      </table>
+    </div>
+  </div>
+}
+
+/* ============ CLIPS ============ */
+function Clips(){
+  const[tab,setTab]=uS('all');
+  const[sel,setSel]=uS([]);
+  const f=CLIPS.filter(c=>tab==='all'||c.status===tab);
+  const toggle=id=>setSel(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  return <div className="wrap">
+    <div className="ph ph-row">
+      <div><h1>Clips</h1><p>Every clip ClipMax cut, scored, and queued. Approve in bulk, tweak a caption, or let autopilot post them all.</p></div>
+      <div style={{display:'flex',gap:10}}>
+        {sel.length>0 && <><span style={{alignSelf:'center',fontSize:13,color:'var(--mut)'}}>{sel.length} selected</span><button className="btn"><Ic n="check"/>Approve</button><button className="btn btn-pri"><Ic n="mega"/>Schedule all</button></>}
+        {sel.length===0 && <button className="btn btn-pri"><Ic n="zap"/>Auto-post everything</button>}
+      </div>
+    </div>
+
+    <div className="tabs">{[['all','All'],['ready','Ready'],['rendering','Rendering'],['scheduled','Scheduled'],['posted','Posted']].map(([k,t])=>
+      <button key={k} className={'tab '+(tab===k?'on':'')} onClick={()=>setTab(k)}>{t} <span style={{opacity:.6,marginLeft:3}}>{k==='all'?CLIPS.length:CLIPS.filter(c=>c.status===k).length}</span></button>)}</div>
+
+    <div className="grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
+      {f.map(c=>
+        <div className="clip" key={c.id} onClick={()=>toggle(c.id)} style={sel.includes(c.id)?{borderColor:'var(--cyan)',boxShadow:'0 0 0 1px var(--cyan)'}:{}}>
+          <div className="clip-thumb">
+            <span className="clip-score">{c.score}</span>
+            <span className="clip-dur">{c.dur}</span>
+            {sel.includes(c.id)&&<div style={{position:'absolute',top:10,right:10,width:22,height:22,borderRadius:'50%',background:'var(--cyan)',display:'grid',placeItems:'center'}}><Ic n="check" s={{width:13,color:'var(--ink)',strokeWidth:3}}/></div>}
+            {c.status==='rendering'?<div style={{textAlign:'center',width:'80%'}}><div style={{fontSize:11,color:'var(--warn)',marginBottom:6,fontWeight:600}}>Rendering {c.prog}%</div><div className="bar"><i style={{width:c.prog+'%'}}></i></div></div>:<div className="clip-play"><IcF n="play"/></div>}
+            {c.status!=='rendering'&&<div className="clip-cap">{c.cap}</div>}
+          </div>
+          <div className="clip-body">
+            <div className="clip-title">{c.title}</div>
+            <div className="clip-meta" style={{justifyContent:'space-between'}}>
+              <StatusTag s={c.status}/>
+              <PlatDots list={c.plats}/>
+            </div>
+            {c.v!=='-'&&<div className="clip-meta" style={{marginTop:8,gap:12}}><span style={{display:'flex',gap:4,alignItems:'center'}}><Ic n="eye" s={{width:12}}/>{c.v}</span><span style={{display:'flex',gap:4,alignItems:'center'}}><IcF n="heart" s={{width:11,color:'var(--pink)'}}/>{c.l}</span></div>}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+}
+
+/* ============ MARKETPLACE ============ */
+function Marketplace(){
+  const[plat,setPlat]=uS('all');
+  const[cart,setCart]=uS([]);
+  const f=MARKET.filter(m=>plat==='all'||m.plat===plat);
+  const add=id=>setCart(c=>c.includes(id)?c.filter(x=>x!==id):[...c,id]);
+  const total=cart.reduce((s,id)=>s+(MARKET.find(m=>m.id===id)?.price||0),0);
+  return <div className="wrap">
+    <div className="ph ph-row">
+      <div><h1>Account Marketplace</h1><p>Buy aged, warmed accounts and they auto-connect straight into your clipping pipeline — posting within minutes. More accounts, more distribution.</p></div>
+      {cart.length>0&&<button className="btn btn-pri btn-lg"><Ic n="cart"/>Checkout · {cart.length} · ${total}</button>}
+    </div>
+
+    <div className="card" style={{marginBottom:22,background:'rgba(243,177,58,.06)',borderColor:'rgba(243,177,58,.2)',display:'flex',gap:12,alignItems:'flex-start'}}>
+      <Ic n="bot" s={{width:18,color:'var(--warn)',flexShrink:0,marginTop:1}}/>
+      <div style={{fontSize:12.5,color:'var(--mut)',lineHeight:1.5}}><b style={{color:'var(--txt)'}}>Managed provisioning.</b> Accounts are created and warmed on your behalf, then handed to your workspace pre-connected. Review platform terms before scaling — accounts can be subject to platform policy.</div>
+    </div>
+
+    <div className="tabs">{[['all','All'],['tiktok','TikTok'],['instagram','Instagram'],['youtube','YouTube']].map(([k,t])=>
+      <button key={k} className={'tab '+(plat===k?'on':'')} onClick={()=>setPlat(k)}>{t}</button>)}</div>
+
+    <div className="grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))'}}>
+      {f.map(m=>{const inc=cart.includes(m.id);return (
+        <div className="card" key={m.id} style={{padding:0,overflow:'hidden',...(inc?{borderColor:'var(--cyan)'}:{})}}>
+          <div style={{padding:'16px 18px',borderBottom:'1px solid var(--line)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <PlatChip p={m.plat}/>
+            {m.warm==='ready'?<span className="tag tag-good">Ready</span>:<span className="tag tag-warn">Warming</span>}
+          </div>
+          <div style={{padding:'16px 18px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 8px',marginBottom:16}}>
+              {[['Followers',m.foll],['Niche',m.niche],['Age',m.age],['Region',m.region]].map(([l,v])=>
+                <div key={l}><div style={{fontSize:10,letterSpacing:.5,textTransform:'uppercase',color:'var(--mut2)',fontWeight:600}}>{l}</div><div style={{fontSize:13.5,fontWeight:600,marginTop:2}}>{v}</div></div>)}
+            </div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div><span style={{fontSize:22,fontWeight:800}}>${m.price}</span><span style={{fontSize:12,color:'var(--mut)'}}>/once</span></div>
+              <button className={inc?'btn btn-sm':'btn btn-pri btn-sm'} onClick={()=>add(m.id)}>{inc?<><Ic n="check"/>Added</>:<><Ic n="plus"/>Add</>}</button>
+            </div>
+          </div>
+        </div>
+      )})}
+    </div>
+  </div>
+}
+
+/* ============ ACCOUNTS ============ */
+function Accounts(){
+  return <div className="wrap">
+    <div className="ph ph-row">
+      <div><h1>Accounts</h1><p>Every account your clips post to. Connect your own, or grab more from the marketplace — they all feed the same pipeline.</p></div>
+      <div style={{display:'flex',gap:10}}><button className="btn"><Ic n="plus"/>Connect account</button><button className="btn btn-pri"><Ic n="cart"/>Buy accounts</button></div>
+    </div>
+    <div className="grid" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:22}}>
+      {[['Total accounts','47'],['Healthy','44'],['Needs attention','3'],['Posts / day','96']].map(([l,v],i)=>
+        <div className="stat" key={i}><div className="lbl">{l}</div><div className="val">{v}</div></div>)}
+    </div>
+    <div className="card">
+      <div className="card-h"><div className="card-t">Connected accounts</div><button className="btn btn-sm"><Ic n="refresh"/>Refresh</button></div>
+      <table className="tbl">
+        <thead><tr><th>Account</th><th>Platform</th><th>Followers</th><th>Source</th><th>Health</th><th></th></tr></thead>
+        <tbody>{ACCOUNTS.map(a=>
+          <tr key={a.id}>
+            <td style={{fontWeight:600}}>{a.h}</td>
+            <td><PlatChip p={a.plat} small/></td>
+            <td className="mono">{a.foll}</td>
+            <td>{a.src==='purchased'?<span className="tag tag-cy">Marketplace</span>:<span className="tag tag-mut">Connected</span>}</td>
+            <td><StatusTag s={a.health}/></td>
+            <td style={{textAlign:'right'}}><button className="btn btn-sm btn-gho">Manage</button></td>
+          </tr>
+        )}</tbody>
+      </table>
+    </div>
+  </div>
+}
+
+/* ============ CAMPAIGNS / WORKFLOWS ============ */
+function Campaigns(){
+  const rows=[['Stream → All Accounts','Active',96,'47 accounts','2m ago'],['HunterUncut Daily','Active',30,'12 accounts','1h ago'],['Hunters Edge Clips','Paused',100,'11 accounts','7d ago'],['Motivation Blast','Draft',0,'0 accounts','Never']];
+  return <div className="wrap">
+    <div className="ph ph-row"><div><h1>Campaigns</h1><p>Posting drives that decide where clips go and how fast. The default sends every new clip to every account.</p></div><button className="btn btn-pri"><Ic n="plus"/>New campaign</button></div>
+    <div className="grid" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:22}}>{[['Active campaigns','2'],['Posts / day target','226'],['Accounts reached','47'],['Clips queued','58']].map(([l,v],i)=><div className="stat" key={i}><div className="lbl">{l}</div><div className="val">{v}</div></div>)}</div>
+    <div className="card" style={{padding:0}}>{rows.map((r,i)=>
+      <div key={i} style={{display:'flex',alignItems:'center',gap:16,padding:'18px 22px',borderTop:i?'1px solid var(--line)':'none'}}>
+        <div style={{width:40,height:40,borderRadius:9,background:'#0a141a',display:'grid',placeItems:'center',border:'1px solid var(--line2)'}}><Ic n="flow" s={{width:18,color:'var(--cyan)'}}/></div>
+        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14.5}}>{r[0]}</div><div style={{fontSize:12,color:'var(--mut)',marginTop:3}}>{r[3]} · last run {r[4]}</div></div>
+        <div style={{textAlign:'center'}}><div style={{fontSize:20,fontWeight:800,fontFamily:'monospace'}}>{r[2]}</div><div style={{fontSize:11,color:'var(--mut2)'}}>posts/day</div></div>
+        <span className={'tag '+(r[1]==='Active'?'tag-good':r[1]==='Paused'?'tag-warn':'tag-mut')}>{r[1]}</span>
+        <button className="btn btn-sm">{r[1]==='Active'?'Pause':'Run'}<Ic n={r[1]==='Active'?'clock':'play'}/></button>
+      </div>
+    )}</div>
+  </div>
+}
+
+/* ============ ANALYTICS ============ */
+function Analytics(){
+  const bars=[20,35,28,52,44,68,80,62,90,74,98,86];
+  return <div className="wrap">
+    <div className="ph ph-row"><div><h1>Analytics</h1><p>How your clips perform across every account, last 30 days.</p></div><button className="btn"><Ic n="refresh"/>Refresh</button></div>
+    <div className="grid" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:16}}>{[['eye','Views','2.4M','+18%'],['heart','Likes','184K','+24%'],['share','Shares','42K','+31%'],['mega','Reach','3.1M','+12%']].map(([ic,l,v,d],i)=><div className="stat" key={i}><div className="glow"></div><div className="lbl"><Ic n={ic}/>{l}</div><div className="val">{v}</div><div className="sub up">{d} vs last mo</div></div>)}</div>
+    <div className="card" style={{marginBottom:16}}>
+      <div className="card-h"><div className="card-t">Views over time</div><span className="tag tag-cy">30D daily</span></div>
+      <div style={{display:'flex',alignItems:'flex-end',gap:6,height:180,padding:'10px 0'}}>{bars.map((b,i)=><div key={i} style={{flex:1,height:b+'%',background:'linear-gradient(180deg,var(--cyan),rgba(6,219,253,.2))',borderRadius:'5px 5px 0 0',minHeight:6}}></div>)}</div>
+    </div>
+    <div className="grid" style={{gridTemplateColumns:'1fr 1fr'}}>
+      <div className="card"><div className="card-h"><div className="card-t">Platform breakdown</div></div>{[['tiktok',58],['youtube',24],['instagram',14],['facebook',4]].map(([p,pct])=><div key={p} style={{marginBottom:14}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><PlatChip p={p} small/><span className="mono" style={{fontSize:12,fontWeight:700}}>{pct}%</span></div><div className="bar"><i style={{width:pct+'%',background:PLAT[p].c}}></i></div></div>)}</div>
+      <div className="card"><div className="card-h"><div className="card-t">Top performing clips</div></div>{CLIPS.filter(c=>c.v!=='-').map((c,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'11px 0',borderTop:i?'1px solid var(--line)':'none'}}><div style={{fontSize:18,fontWeight:800,color:'var(--mut2)',width:20}}>{i+1}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.title}</div></div><div className="mono" style={{fontSize:13,fontWeight:700,color:'var(--cyan)'}}>{c.v}</div></div>)}</div>
+    </div>
+  </div>
+}
+
+/* ============ OPERATOR ============ */
+function Operator(){
+  return <div className="wrap" style={{maxWidth:820,paddingTop:80}}>
+    <div style={{textAlign:'center',marginBottom:40}}>
+      <span className="tag tag-cy" style={{marginBottom:20}}><span style={{width:6,height:6,borderRadius:'50%',background:'var(--cyan)',display:'inline-block'}}></span> AI Operator</span>
+      <h1 style={{fontSize:46,fontWeight:800,letterSpacing:-1.5,lineHeight:1.05,marginTop:14}}>What do you want to <span className="gradient-text">clip</span> today?</h1>
+      <p style={{color:'var(--mut)',fontSize:15,marginTop:14,maxWidth:520,margin:'14px auto 0'}}>Tell the Operator a job in plain English. It drafts the work, you confirm, it runs the bulk job.</p>
+    </div>
+    <div className="card" style={{padding:0,borderColor:'var(--line2)'}}>
+      <textarea className="inp" placeholder="Clip my last stream into 30 vertical clips and post the top 10 to every account at 2-hour intervals..." style={{border:'none',background:'transparent',minHeight:120,resize:'none',padding:20,fontSize:15}}></textarea>
+      <div style={{display:'flex',justifyContent:'space-between',padding:'12px 16px',borderTop:'1px solid var(--line)'}}>
+        <button className="btn btn-sm"><Ic n="grid"/>Bulk Operations</button>
+        <button className="btn btn-pri">Send<Ic n="arrow"/></button>
+      </div>
+    </div>
+    <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center',marginTop:20}}>
+      {['Clip my last stream → 30 clips','Post top clips to all accounts','Re-cut clip 4 with bigger captions','Make 5 motivation clips'].map((s,i)=><button key={i} className="btn btn-sm btn-gho" style={{borderColor:'var(--line)'}}>{s}</button>)}
+    </div>
+    <div style={{textAlign:'center',marginTop:40,fontSize:11,letterSpacing:1,color:'var(--mut2)'}}>CONNECTED TO &nbsp; {Object.values(PLAT).map(p=><span key={p.name} style={{margin:'0 8px',color:'var(--mut)'}}>{p.name}</span>)}</div>
+  </div>
+}
+
+/* ============ generic placeholder pages ============ */
+function Calendar(){
+  const days=Array.from({length:35},(_,i)=>i-5);
+  const dots={14:2,15:4,18:3,20:6};
+  return <div className="wrap"><div className="ph"><h1>Content Calendar</h1><p>Every scheduled and posted clip across your accounts, at a glance.</p></div>
+    <div className="card"><div className="card-h"><div className="card-t">June 2026</div><div style={{display:'flex',gap:6}}>{Object.values(PLAT).map(p=><PlatChip key={p.name} p={Object.keys(PLAT).find(k=>PLAT[k]===p)} small/>)}</div></div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:8}}>{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=><div key={d} style={{fontSize:11,color:'var(--mut2)',fontWeight:700,padding:'4px 8px',textTransform:'uppercase',letterSpacing:1}}>{d}</div>)}
+    {days.map((d,i)=>{const day=d>0&&d<=30?d:'';const today=day===20;return <div key={i} style={{aspectRatio:'1.3',borderRadius:9,border:'1px solid '+(today?'var(--cyan)':'var(--line)'),background:today?'rgba(6,219,253,.05)':'var(--deep)',padding:10,position:'relative'}}><span style={{fontSize:13,fontWeight:600,color:day?'var(--txt)':'var(--mut2)'}}>{day}</span>{dots[day]&&<span style={{position:'absolute',top:8,right:8,fontSize:9,fontWeight:800,background:'var(--cyan)',color:'var(--ink)',padding:'1px 6px',borderRadius:10}}>{dots[day]}</span>}{dots[day]&&<div style={{position:'absolute',bottom:8,left:10,display:'flex',gap:3}}>{Array.from({length:Math.min(dots[day],4)}).map((_,j)=><span key={j} style={{width:5,height:5,borderRadius:'50%',background:'var(--pink)'}}></span>)}</div>}</div>})}
+    </div></div></div>
+}
+function Inbox(){return <div className="wrap"><div className="ph"><h1>Inbox</h1><p>Comments and DMs from your clips, in one place.</p></div><div className="card"><div className="tabs" style={{margin:0,marginBottom:18}}>{['Comments','DMs','Auto-DMs'].map((t,i)=><button key={t} className={'tab '+(i===0?'on':'')}>{t}</button>)}</div><div className="empty"><Ic n="inbox"/><h3>Select a clip to view comments</h3><div style={{fontSize:13}}>Comment replies and auto-DM keywords show up here once clips go live.</div></div></div></div>}
+function Integrations(){
+  const ints=[['Claude','Moment scoring & titles','CONNECTED'],['Deepgram','Transcription','CONNECTED'],['FFmpeg Render','Clip cutting & captions','CONNECTED'],['Twitch','Live detection & VODs','CONNECTED'],['ElevenLabs','Optional voiceover','CONNECTED'],['Stripe','Billing & marketplace','CONNECTED'],['Zernio','Multi-account publishing','CONNECTED'],['Google Drive','Clip archive','DISCONNECTED']];
+  return <div className="wrap"><div className="ph"><h1>Integrations</h1><p>The services that power your clipping pipeline.</p></div>
+    <div className="grid" style={{gridTemplateColumns:'repeat(2,1fr)'}}>{ints.map(([n,d,s],i)=>
+      <div className="card" key={i}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div className="card-t">{n}</div><div className="card-d" style={{marginTop:4}}>{d}</div></div><span className={'tag '+(s==='CONNECTED'?'tag-good':'tag-mut')}>{s==='CONNECTED'?'Connected':'Disconnected'}</span></div>
+      <div style={{marginTop:16,display:'flex',gap:8}}>{s==='CONNECTED'?<><button className="btn btn-sm">Test</button><button className="btn btn-sm btn-gho" style={{color:'var(--bad)'}}>Remove</button></>:<button className="btn btn-pri btn-sm"><Ic n="plug"/>Connect</button>}</div></div>
+    )}</div></div>
+}
+function Team(){const m=[['hmcclellan077770','Owner','Jun 4'],['brendonbvt1','Admin','Jun 7'],['rashaddennis01','Admin','Jun 12'],['itscletusraj','Editor','Jun 12']];
+  return <div className="wrap"><div className="ph"><h1>Team</h1><p>Invite teammates to collaborate in this workspace.</p></div>
+  <div className="card"><div className="card-h"><div className="card-t">Members <span style={{color:'var(--cyan)'}}>{m.length}</span></div></div>{m.map((u,i)=>
+    <div key={i} style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderTop:i?'1px solid var(--line)':'none'}}><div className="ws-av">{u[0].slice(0,2).toUpperCase()}</div><div style={{flex:1}}><div style={{fontWeight:600,fontSize:14}}>{u[0]} {i===0&&<span className="tag tag-cy" style={{marginLeft:6}}>You</span>}</div><div style={{fontSize:12,color:'var(--mut)'}}>{u[0]}@gmail.com</div></div><span className={'tag '+(u[1]==='Owner'?'tag-warn':'tag-mut')}>{u[1]}</span><span style={{fontSize:12,color:'var(--mut2)'}}>{u[2]}, 2026</span></div>
+  )}</div>
+  <div className="card" style={{marginTop:16}}><div className="card-t" style={{marginBottom:14}}>Invite teammate</div><div style={{display:'flex',gap:10}}><input className="inp" placeholder="teammate@example.com"/><button className="btn btn-pri" style={{whiteSpace:'nowrap'}}><Ic n="plus"/>Send invite</button></div></div></div>
+}
+function Whitelabel(){const tabs=['Overview','Branding','Domains','Billing','Plans','Clients'];const[t,setT]=uS('Overview');
+  return <div className="wrap"><div className="ph"><h1>White Label</h1><p>Resell ClipMax under your own brand. Manage branding, domains, and client workspaces from one place.</p></div>
+  <div className="tabs">{tabs.map(x=><button key={x} className={'tab '+(t===x?'on':'')} onClick={()=>setT(x)}>{x}</button>)}</div>
+  {t==='Branding'?<div className="grid" style={{gridTemplateColumns:'1fr 1fr'}}>
+    <div className="card"><div className="card-t" style={{marginBottom:16}}>Brand identity</div><label className="lbl-f">App name</label><input className="inp" defaultValue="ClipMax" style={{marginBottom:16}}/><label className="lbl-f">Tagline</label><input className="inp" defaultValue="Clip everything. Post everywhere." style={{marginBottom:16}}/><label className="lbl-f">Accent color</label><div style={{display:'flex',gap:10,alignItems:'center'}}><div style={{width:42,height:42,borderRadius:9,background:'var(--cyan)'}}></div><input className="inp mono" defaultValue="#06DBFD" style={{width:140}}/></div></div>
+    <div className="card"><div className="card-t" style={{marginBottom:16}}>Live preview</div><div style={{background:'var(--ink)',borderRadius:12,padding:20,border:'1px solid var(--line)'}}><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}><div className="logo" style={{background:'#0a141a',border:'1px solid var(--line2)'}}><Logo size={18}/></div><div style={{fontWeight:800}}>ClipMax</div></div><div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>{['1,284','2.4M','99.2%'].map((v,i)=><div key={i} style={{background:'var(--card)',borderRadius:9,padding:12}}><div style={{fontSize:18,fontWeight:800}}>{v}</div><div style={{fontSize:9,color:'var(--mut2)',textTransform:'uppercase',letterSpacing:1,marginTop:2}}>{['clips','views','uptime'][i]}</div></div>)}</div></div></div>
+  </div>:<div className="card"><div className="card-t" style={{marginBottom:8}}>{t}</div><div className="card-d">Manage your {t.toLowerCase()} settings for the reseller experience. Your branded portal is live at <span className="mono" style={{color:'var(--cyan)'}}>huntersedge.biz</span>.</div></div>}
+  </div>
+}
+
+/* ============ APP SHELL ============ */
+const PAGES={dashboard:Dashboard,streams:Streams,clips:Clips,campaigns:Campaigns,calendar:Calendar,analytics:Analytics,marketplace:Marketplace,accounts:Accounts,operator:Operator,inbox:Inbox,integrations:Integrations,team:Team,whitelabel:Whitelabel};
+const NAV=[
+  {sec:'Create'},
+  {k:'dashboard',ic:'grid',t:'Dashboard'},
+  {k:'streams',ic:'stream',t:'Sources',dot:true},
+  {k:'clips',ic:'film',t:'Clips',badge:'12'},
+  {k:'operator',ic:'bot',t:'AI Operator'},
+  {sec:'Distribute'},
+  {k:'campaigns',ic:'flow',t:'Campaigns'},
+  {k:'calendar',ic:'cal',t:'Calendar'},
+  {k:'accounts',ic:'users',t:'Accounts'},
+  {k:'marketplace',ic:'cart',t:'Marketplace',badge:'New'},
+  {sec:'Measure & Manage'},
+  {k:'analytics',ic:'chart',t:'Analytics'},
+  {k:'inbox',ic:'inbox',t:'Inbox'},
+  {k:'integrations',ic:'plug',t:'Integrations'},
+  {k:'team',ic:'users',t:'Team'},
+  {k:'whitelabel',ic:'paint',t:'White Label'},
+];
+const TITLES={dashboard:'Dashboard',streams:'Sources',clips:'Clips',campaigns:'Campaigns',calendar:'Calendar',analytics:'Analytics',marketplace:'Marketplace',accounts:'Accounts',operator:'AI Operator',inbox:'Inbox',integrations:'Integrations',team:'Team',whitelabel:'White Label'};
+
+function App(){
+  const[page,setPage]=uS('dashboard');
+  const[open,setOpen]=uS(false);
+  const Page=PAGES[page];
+  uE(()=>{document.querySelector('.main').scrollTop=0},[page]);
+  return <div className="app">
+    <div className={'side'+(open?' open':'')}>
+      <div className="brand">
+        <div className="logo" style={{background:'#0a141a',border:'1px solid var(--line2)',boxShadow:'0 0 16px rgba(6,219,253,.25)'}}><Logo size={20}/></div>
+        <div><div className="brand-name">Clip<b>Max</b></div><div className="brand-sub">Mass Distribution</div></div>
+      </div>
+      <div className="nav">{NAV.map((n,i)=>n.sec?<div className="nav-sec" key={i}>{n.sec}</div>:
+        <div key={n.k} className={'nav-i'+(page===n.k?' on':'')} onClick={()=>{setPage(n.k);setOpen(false)}}>
+          <Ic n={n.ic}/>{n.t}{n.badge&&<span className="badge">{n.badge}</span>}{n.dot&&<span className="dot"></span>}
+        </div>)}
+      </div>
+      <div className="ws"><div className="ws-av">HU</div><div style={{flex:1}}><div className="ws-name">HunterUncut</div><div className="ws-tag">Pro · White Label</div></div></div>
+    </div>
+    <div className="main">
+      <div className="top">
+        <button className="btn btn-sm btn-gho" style={{display:'none'}} onClick={()=>setOpen(o=>!o)}>☰</button>
+        <div className="crumb">ClipMax <span style={{color:'var(--mut2)'}}>/</span> <b>{TITLES[page]}</b></div>
+        <div className="top-r">
+          <span className="live-pill"><span className="b"></span>1 stream live</span>
+          <button className="btn btn-sm"><Ic n="search"/></button>
+        </div>
+      </div>
+      <Page go={setPage}/>
+    </div>
+  </div>
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
