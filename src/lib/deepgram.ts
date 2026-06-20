@@ -21,50 +21,71 @@ export type TranscribeResult = {
   durationSec: number;
 };
 
-export async function transcribeUrl(
-  url: string,
-  opts: { model?: string } = {},
-): Promise<TranscribeResult> {
-  const key = process.env.DEEPGRAM_API_KEY;
-  if (!key) throw new Error("DEEPGRAM_API_KEY is not configured.");
-
-  const params = new URLSearchParams({
-    model: opts.model ?? "nova-2",
+function params(model?: string): string {
+  return new URLSearchParams({
+    model: model ?? "nova-2",
     smart_format: "true",
     punctuate: "true",
-  });
+  }).toString();
+}
 
-  const res = await fetch(`${LISTEN_URL}?${params}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Token ${key}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({ url }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Deepgram transcription failed: ${res.status} ${detail}`);
-  }
-
-  const json = (await res.json()) as {
-    metadata?: { duration?: number };
-    results?: {
-      channels?: { alternatives?: { words?: DeepgramWord[] }[] }[];
-    };
-  };
-
-  const dgWords =
-    json.results?.channels?.[0]?.alternatives?.[0]?.words ?? [];
+function parseResult(json: {
+  metadata?: { duration?: number };
+  results?: { channels?: { alternatives?: { words?: DeepgramWord[] }[] }[] };
+}): TranscribeResult {
+  const dgWords = json.results?.channels?.[0]?.alternatives?.[0]?.words ?? [];
   const words: TranscriptWord[] = dgWords.map((w) => ({
     word: w.punctuated_word ?? w.word,
     start: w.start,
     end: w.end,
   }));
-
   const durationSec =
     json.metadata?.duration ?? (words.length ? words[words.length - 1].end : 0);
-
   return { words, durationSec };
+}
+
+function key(): string {
+  const k = process.env.DEEPGRAM_API_KEY;
+  if (!k) throw new Error("DEEPGRAM_API_KEY is not configured.");
+  return k;
+}
+
+/** Transcribe a media URL Deepgram can fetch (used by the manual clip-job). */
+export async function transcribeUrl(
+  url: string,
+  opts: { model?: string } = {},
+): Promise<TranscribeResult> {
+  const res = await fetch(`${LISTEN_URL}?${params(opts.model)}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Token ${key()}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) {
+    throw new Error(`Deepgram transcription failed: ${res.status} ${await res.text()}`);
+  }
+  return parseResult(await res.json());
+}
+
+/** Transcribe raw audio bytes (used by the worker on the extracted wav). */
+export async function transcribeBuffer(
+  audio: Uint8Array,
+  opts: { model?: string; contentType?: string } = {},
+): Promise<TranscribeResult> {
+  const res = await fetch(`${LISTEN_URL}?${params(opts.model)}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Token ${key()}`,
+      "content-type": opts.contentType ?? "audio/wav",
+    },
+    // undici accepts a Uint8Array/Buffer body at runtime; the cast sidesteps
+    // a TS lib mismatch (ArrayBufferLike vs ArrayBuffer).
+    body: audio as unknown as BodyInit,
+  });
+  if (!res.ok) {
+    throw new Error(`Deepgram transcription failed: ${res.status} ${await res.text()}`);
+  }
+  return parseResult(await res.json());
 }
