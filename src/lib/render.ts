@@ -38,6 +38,9 @@ export async function extractAudio(
 ): Promise<void> {
   await exec("ffmpeg", [
     "-y",
+    "-hide_banner",
+    "-loglevel",
+    "error",
     "-i",
     inPath,
     "-vn",
@@ -82,6 +85,9 @@ export async function renderClip(opts: {
     "ffmpeg",
     [
       "-y",
+      "-hide_banner",
+      "-loglevel",
+      "error",
       "-ss",
       start.toFixed(2),
       "-i",
@@ -96,6 +102,8 @@ export async function renderClip(opts: {
       "veryfast",
       "-crf",
       "20",
+      "-threads",
+      "2",
       "-c:a",
       "aac",
       "-b:a",
