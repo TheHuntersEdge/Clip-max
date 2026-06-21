@@ -75,11 +75,12 @@ export async function renderClip(opts: {
   const { inPath, start, end, caption, outPath } = opts;
   const duration = Math.max(1, end - start);
 
-  const reframe = "crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920";
+  // 720x1280 keeps MVP clips small enough to serve from the DB via Vercel (~4.5MB cap).
+  const reframe = "crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=720:1280";
   const drawtext =
     `drawtext=fontfile='${FONT}':text='${escapeDrawText(caption.toUpperCase())}':` +
-    `fontcolor=white:fontsize=72:borderw=6:bordercolor=black@0.9:` +
-    `x=(w-text_w)/2:y=h-360:line_spacing=8`;
+    `fontcolor=white:fontsize=46:borderw=4:bordercolor=black@0.9:` +
+    `x=(w-text_w)/2:y=h-220:line_spacing=8`;
 
   await exec(
     "ffmpeg",
@@ -101,7 +102,7 @@ export async function renderClip(opts: {
       "-preset",
       "veryfast",
       "-crf",
-      "20",
+      "26",
       "-threads",
       "2",
       "-c:a",

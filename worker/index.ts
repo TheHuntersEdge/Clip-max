@@ -60,6 +60,8 @@ async function processStream(streamId: string): Promise<void> {
       transcript: words,
       streamTitle: stream.title ?? undefined,
       clipCount: CLIPS_PER_STREAM,
+      minDuration: 15,
+      maxDuration: 30,
     });
     log(`[${streamId}] ${clips.length} clips selected, rendering…`);
 
