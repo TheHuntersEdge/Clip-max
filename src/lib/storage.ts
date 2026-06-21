@@ -38,13 +38,12 @@ function required(name: string): string {
   return v;
 }
 
-/** Upload a local file to R2 and return its public URL. */
-export async function uploadFile(
-  localPath: string,
+/** Upload raw bytes to R2 and return the public URL. */
+export async function uploadBytes(
   key: string,
+  body: Uint8Array | string,
   contentType: string,
 ): Promise<string> {
-  const body = await readFile(localPath);
   await r2().send(
     new PutObjectCommand({
       Bucket: required("R2_BUCKET"),
@@ -55,4 +54,14 @@ export async function uploadFile(
   );
   const base = required("R2_PUBLIC_BASE_URL").replace(/\/$/, "");
   return `${base}/${key}`;
+}
+
+/** Upload a local file to R2 and return its public URL. */
+export async function uploadFile(
+  localPath: string,
+  key: string,
+  contentType: string,
+): Promise<string> {
+  const body = await readFile(localPath);
+  return uploadBytes(key, body, contentType);
 }
