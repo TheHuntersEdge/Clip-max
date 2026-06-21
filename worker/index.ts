@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { transcribeBuffer } from "@/lib/deepgram";
 import { scoreMoments } from "@/lib/scoring";
 import { downloadVod, extractAudio, renderClip } from "@/lib/render";
+import { processDuePosts } from "@/lib/posting";
 import { ClipStatus, StreamStatus } from "@/generated/prisma/client";
 
 const POLL_MS = Number(process.env.WORKER_POLL_MS ?? 10_000);
@@ -155,7 +156,10 @@ async function main() {
     try {
       const id = await nextStream();
       if (id) await processStream(id);
-      else await sleep(POLL_MS);
+      // Publishing runs every tick so scheduled posts go out on time.
+      const { posted } = await processDuePosts();
+      if (posted > 0) log(`published ${posted} post(s)`);
+      if (!id) await sleep(POLL_MS);
     } catch (err) {
       console.error("worker error:", err);
       await sleep(POLL_MS);
