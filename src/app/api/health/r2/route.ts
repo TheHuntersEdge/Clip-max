@@ -24,10 +24,12 @@ export async function GET() {
       {
         ok: false,
         error: err instanceof Error ? err.message : String(err),
-        endpoint: process.env.R2_ACCOUNT_ID
-          ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
-          : "R2_ACCOUNT_ID missing",
-        bucket: process.env.R2_BUCKET ?? "missing",
+        endpoint:
+          process.env.S3_ENDPOINT ??
+          (process.env.R2_ACCOUNT_ID
+            ? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+            : "missing"),
+        bucket: process.env.S3_BUCKET ?? process.env.R2_BUCKET ?? "missing",
       },
       { status: 500 },
     );
