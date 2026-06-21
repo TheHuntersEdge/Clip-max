@@ -20,6 +20,10 @@ function r2(): S3Client {
   client = new S3Client({
     region: "auto",
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    // R2's wildcard cert covers only *.r2.cloudflarestorage.com (one level), so
+    // virtual-hosted style (bucket.account.r2…) fails TLS. Path-style keeps the
+    // bucket in the path and the host at a single subdomain.
+    forcePathStyle: true,
     credentials: {
       accessKeyId: required("R2_ACCESS_KEY_ID"),
       secretAccessKey: required("R2_SECRET_ACCESS_KEY"),
