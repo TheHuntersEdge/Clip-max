@@ -55,13 +55,15 @@ export async function processDuePosts(limit = 25) {
   let posted = 0;
   for (const post of due) {
     try {
-      const result = await adapterFor(post.account.platform).publish({
+      const adapter = adapterFor(post.account.platform, !!post.account.externalId);
+      const result = await adapter.publish({
         platform: post.account.platform,
         handle: post.account.handle,
         followers: post.account.followers,
         clipId: post.clipId,
         title: post.clip.title,
         renderUrl: post.clip.renderUrl,
+        externalId: post.account.externalId,
       });
       await prisma.post.update({
         where: { id: post.id },

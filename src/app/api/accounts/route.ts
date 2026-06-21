@@ -30,7 +30,13 @@ export async function POST(req: Request) {
     create: { id: "manual", name: "Manual jobs" },
   });
 
-  let body: { platform?: string; handle?: string; followers?: number; demo?: boolean } = {};
+  let body: {
+    platform?: string;
+    handle?: string;
+    followers?: number;
+    externalId?: string;
+    demo?: boolean;
+  } = {};
   try {
     body = await req.json();
   } catch {
@@ -44,6 +50,7 @@ export async function POST(req: Request) {
         platform: body.platform as SocialPlatform,
         handle: body.handle,
         followers: body.followers ?? 0,
+        externalId: body.externalId ?? null,
       },
     });
     return NextResponse.json({ created: 1, accounts: [account] });

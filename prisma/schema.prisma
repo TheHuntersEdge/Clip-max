@@ -225,6 +225,7 @@ model SocialAccount {
   followers   Int            @default(0)
   source      AccountSource  @default(CONNECTED)
   health      AccountHealth  @default(HEALTHY)
+  externalId  String?        // provider profile id (e.g. Upload-Post `user`)
   createdAt   DateTime       @default(now())
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
