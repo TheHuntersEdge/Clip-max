@@ -210,6 +210,7 @@ model Clip {
   caption   String?
   status    ClipStatus @default(PENDING)
   renderUrl String?
+  data      Bytes?     // MVP: rendered mp4 stored inline, served via /api/clips/[id]/video
   createdAt DateTime   @default(now())
 
   stream Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)

@@ -19,11 +19,14 @@ import { prisma } from "@/lib/prisma";
 import { transcribeBuffer } from "@/lib/deepgram";
 import { scoreMoments } from "@/lib/scoring";
 import { downloadVod, extractAudio, renderClip } from "@/lib/render";
-import { uploadFile } from "@/lib/storage";
 import { ClipStatus, StreamStatus } from "@/generated/prisma/client";
 
 const POLL_MS = Number(process.env.WORKER_POLL_MS ?? 10_000);
 const CLIPS_PER_STREAM = Number(process.env.CLIPS_PER_STREAM ?? 10);
+const APP_BASE = (process.env.APP_BASE_URL ?? "https://clipmax-pied.vercel.app").replace(
+  /\/$/,
+  "",
+);
 
 async function processStream(streamId: string): Promise<void> {
   const stream = await prisma.stream.findUnique({ where: { id: streamId } });
@@ -71,10 +74,9 @@ async function processStream(streamId: string): Promise<void> {
         caption: c.caption,
         outPath,
       });
-      const key = `clips/${streamId}/${i}-${Date.now()}.mp4`;
-      const renderUrl = await uploadFile(outPath, key, "video/mp4");
-
-      await prisma.clip.create({
+      // MVP storage: keep the clip bytes in Postgres, served by the web app.
+      const bytes = await readFile(outPath);
+      const clip = await prisma.clip.create({
         data: {
           streamId,
           start: c.start,
@@ -84,10 +86,17 @@ async function processStream(streamId: string): Promise<void> {
           reason: c.reason,
           score: c.score,
           status: ClipStatus.READY,
-          renderUrl,
+          data: bytes,
         },
       });
-      log(`[${streamId}] clip ${i}/${clips.length} → ${renderUrl}`);
+      const renderUrl = `${APP_BASE}/api/clips/${clip.id}/video`;
+      await prisma.clip.update({
+        where: { id: clip.id },
+        data: { renderUrl },
+      });
+      log(
+        `[${streamId}] clip ${i}/${clips.length} → ${renderUrl} (${(bytes.length / 1e6).toFixed(1)}MB)`,
+      );
     }
 
     await prisma.stream.update({
