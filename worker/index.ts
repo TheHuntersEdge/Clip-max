@@ -98,7 +98,7 @@ async function processStream(streamId: string): Promise<void> {
   } catch (err) {
     await prisma.stream.update({
       where: { id: streamId },
-      data: { status: StreamStatus.FAILED },
+      data: { status: StreamStatus.FAILED, error: errText(err).slice(0, 4000) },
     });
     throw err;
   } finally {
@@ -118,6 +118,16 @@ async function nextStream(): Promise<string | null> {
 
 function log(msg: string) {
   console.log(`${new Date().toISOString()} ${msg}`);
+}
+
+/** Extract a useful message from an error, including child-process stderr. */
+function errText(err: unknown): string {
+  if (err && typeof err === "object") {
+    const e = err as { message?: string; stderr?: string; stdout?: string };
+    const parts = [e.message, e.stderr, e.stdout].filter(Boolean).join("\n");
+    if (parts) return parts;
+  }
+  return String(err);
 }
 
 async function main() {

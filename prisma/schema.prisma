@@ -193,6 +193,7 @@ model Stream {
   startedAt DateTime?
   endedAt   DateTime?
   status    StreamStatus @default(LIVE)
+  error     String?
 
   source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   clips  Clip[]
